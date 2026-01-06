@@ -86,7 +86,7 @@ source "$VENV_DIR/bin/activate"
 # 目的: 本リポの keyball/ を qmk_firmware から参照可能にするための symlink を作る
 link_into_tree() {
   local tree_dir="$1"
-  local from="$tree_dir/keyboards/keyball"
+  local from="$tree_dir/keyboards/keyball-rp"
   local to="../../$KEYBALL_DIR"
   mkdir -p "$tree_dir/keyboards"
   if [ -e "$from" ] || [ -L "$from" ]; then rm -rf "$from"; fi
@@ -104,9 +104,9 @@ link_into_tree "$VIAL_DIR"
 #   最後の引数     : QMKのターゲット名（keyboard:keymap）
 
 QMK_BUILDS=(
-  "keyball/keyball39:toxaO"
-  "keyball/keyball44:toxaO"
-  "keyball/keyball61:toxaO"
+  "keyball-rp/keyball39:toxaO"
+  "keyball-rp/keyball44:toxaO"
+  "keyball-rp/keyball61:toxaO"
 )
 
 for pair in "${QMK_BUILDS[@]}"; do
@@ -123,12 +123,12 @@ say "QMK build done. artifacts → $QMK_DIR/.build/"
 #   VIAL_ENABLE=yes: Vial 機能を有効化
 #   最後の引数     : QMKのターゲット名（keyboard:keymap）
 
-say "[Vial] build -> keyball/keyball39:toxaO (SKIP_GIT=yes VIAL_ENABLE=yes)"
-make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball/keyball39:toxaO
+say "[Vial] build -> keyball-rp/keyball39:toxaO (SKIP_GIT=yes VIAL_ENABLE=yes)"
+make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball-rp/keyball39:toxaO
 
 # 追加で他ターゲットを作る場合の例（必要ならコメント解除）
-# make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball/keyball44:toxaO
-# make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball/keyball61:toxaO
+# make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball-rp/keyball44:toxaO
+# make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball-rp/keyball61:toxaO
 
 say "Vial build done. artifacts → $VIAL_DIR/.build/"
 say "All done! 生成された .uf2 を各 .build/ ディレクトリで確認してください。"
