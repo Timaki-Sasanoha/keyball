@@ -11,8 +11,8 @@
 #   1) 依存コマンドの有無を確認（無ければ各OSごとの導入コマンドを案内）
 #   2) Python 仮想環境(.venv) + qmk CLI の導入
 #   3) qmk_firmware / vial-qmk 側に keyboards/keyball のシンボリックリンクを作成
-#   4) QMK 側で mymap をビルド（39/44/61）
-#   5) Vial 側で mymap をビルド（例: 39）
+#   4) QMK 側で toxaO をビルド（39/44/61）
+#   5) Vial 側で toxaO をビルド（例: 39）
 #
 # 注意:
 #   - 本リポジトリ直下で実行してください（keyball/ と qmk_firmware/ と vial-qmk/ が並んでいる前提）。
@@ -73,19 +73,14 @@ if [ ${#missing[@]} -gt 0 ]; then
   exit 1
 fi
 
-# --- Python 仮想環境 + qmk CLI ------------------------------------------------
+# --- Python 仮想環境 ------------------------------------------------
 if [ ! -d "$VENV_DIR" ]; then
   say "Create Python venv: $VENV_DIR"
   python3 -m venv "$VENV_DIR"
 fi
 # shellcheck disable=SC1091
 source "$VENV_DIR/bin/activate"
-python3 -m pip install -U pip qmk
-
-# qmk CLI に QMK_HOME を通知（-H で既存の qmk_firmware を HOME とする）
-QMK_HOME_ABS="$(cd "$QMK_DIR" && pwd)"
-say "qmk setup -H $QMK_HOME_ABS (-y=質問に自動Yes)"
-qmk setup -H "$QMK_HOME_ABS" -y || true
+# qmk CLI は使用しないのでインストール不要
 
 # --- キーボード本体をQMKツリーへリンク ----------------------------------------
 # 目的: 本リポの keyball/ を qmk_firmware から参照可能にするための symlink を作る
@@ -103,21 +98,20 @@ link_into_tree "$QMK_DIR"
 link_into_tree "$VIAL_DIR"
 
 # --- QMK 側ビルド --------------------------------------------------------------
-# qmk CLI でコンパイル。-kb=キーボード, -km=キーマップ を指定
+# make を直接使用。公式の推奨手順に合わせて
+#   -C qmk_firmware   : このディレクトリでMakeを実行
+#   SKIP_GIT=yes  : インターネット接続前提のバージョン取得をスキップ（ローカルのみで完結）
+#   最後の引数     : QMKのターゲット名（keyboard:keymap）
+
 QMK_BUILDS=(
-  "keyball/keyball39:mymap"
-  "keyball/keyball44:mymap"
-  "keyball/keyball61:mymap"
+  "keyball/keyball39:toxaO"
+  "keyball/keyball44:toxaO"
+  "keyball/keyball61:toxaO"
 )
 
 for pair in "${QMK_BUILDS[@]}"; do
-  KB="${pair%%:*}"
-  KM="${pair##*:}"
-  say "[QMK] build -> kb=$KB km=$KM"
-  # qmk clean: 中間生成物を掃除（-q静かに -nドライラン無効 -y全自動）
-  qmk clean -q -n -y || true
-  # qmk compile: 指定kb/kmをビルド
-  qmk compile -kb "$KB" -km "$KM"
+  say "[QMK] build -> $pair"
+  make -C "$QMK_DIR" SKIP_GIT=yes "$pair"
 done
 
 say "QMK build done. artifacts → $QMK_DIR/.build/"
@@ -129,12 +123,12 @@ say "QMK build done. artifacts → $QMK_DIR/.build/"
 #   VIAL_ENABLE=yes: Vial 機能を有効化
 #   最後の引数     : QMKのターゲット名（keyboard:keymap）
 
-say "[Vial] build -> keyball/keyball39:mymap (SKIP_GIT=yes VIAL_ENABLE=yes)"
-make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball/keyball39:mymap
+say "[Vial] build -> keyball/keyball39:toxaO (SKIP_GIT=yes VIAL_ENABLE=yes)"
+make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball/keyball39:toxaO
 
 # 追加で他ターゲットを作る場合の例（必要ならコメント解除）
-# make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball/keyball44:mymap
-# make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball/keyball61:mymap
+# make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball/keyball44:toxaO
+# make -C "$VIAL_DIR" SKIP_GIT=yes VIAL_ENABLE=yes keyball/keyball61:toxaO
 
 say "Vial build done. artifacts → $VIAL_DIR/.build/"
 say "All done! 生成された .uf2 を各 .build/ ディレクトリで確認してください。"
